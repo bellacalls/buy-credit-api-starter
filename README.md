@@ -83,9 +83,8 @@ Response:
 
 **GET /wallets**
 ```bash
-curl -X GET http://localhost:8080/v1/wallets \
+curl -X GET http://localhost:8080/v1/users/{user_id}/wallets \
   -H "Authorization: Bearer {token}" \
-  -H "X-User-ID: usr_123"
 ```
 
 Response:
@@ -97,9 +96,7 @@ Response:
       "userId": "usr_123",
       "currency": "USD",
       "balance": "1500.50",
-      "status": "ACTIVE",
-      "createdAt": "2026-02-18T10:00:00Z",
-      "updatedAt": "2026-02-18T10:00:00Z"
+      "status": "ACTIVE"
     }
   ]
 }
@@ -107,14 +104,14 @@ Response:
 
 ### Create Transaction (Buy Credit)
 
-**POST /transactions/credit-purchase**
+**POST /transactions**
 ```bash
-curl -X POST http://localhost:8080/v1/transactions/credit-purchase \
+curl -X POST http://localhost:8080/v1/transactions \
   -H "Authorization: Bearer {token}" \
-  -H "X-User-ID: usr_123" \
-  -H "Idempotency-Key: unique-key-123" \
   -H "Content-Type: application/json" \
   -d '{
+    "idempotencyKey": "unique-key-123",
+    "userId": "usr_123",
     "walletId": "wlt_usd_abc123",
     "amount": "10.00",
     "currency": "USD",
