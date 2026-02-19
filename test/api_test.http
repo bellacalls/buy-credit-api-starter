@@ -54,3 +54,27 @@ Content-Type: application/json
 # Expected response: 200 OK with transaction details
 GET http://localhost:8080/v1/transactions/{{transaction_id}}
 Authorization: Bearer {{auth_token}}
+
+### Register Webhook
+# Registers a new webhook for the authenticated partner
+# Expected response: 201 Created with webhook details
+# Stores the webhook ID for subsequent requests
+POST http://localhost:8080/v1/webhooks
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "url": "https://bellamobile.co/webhooks/sample-provider",
+  "events": ["transaction.completed", "transaction.failed"],
+  "secret": "webhook_secret_123"
+}
+
+> {%
+    client.global.set("webhook_id", response.body.webhook.id);
+%}
+
+### Get Webhooks
+# Retrieves all webhooks for the authenticated partner
+# Expected response: 200 OK with list of webhooks
+GET http://localhost:8080/v1/webhooks
+Authorization: Bearer {{auth_token}}

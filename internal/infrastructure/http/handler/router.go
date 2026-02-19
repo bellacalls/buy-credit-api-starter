@@ -12,6 +12,7 @@ func SetupRouter(
 	authHandler *AuthHandler,
 	walletHandler *WalletHandler,
 	transactionHandler *TransactionHandler,
+	webhookHandler *WebhookHandler,
 	authMiddleware *appMiddleware.AuthMiddleware,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -43,6 +44,10 @@ func SetupRouter(
 			// Transaction routes
 			r.Post("/transactions", transactionHandler.CreateTransaction)
 			r.Get("/transactions/{transactionId}", transactionHandler.GetTransaction)
+
+			// Webhook routes
+			r.Post("/webhooks", webhookHandler.RegisterWebhook)
+			r.Get("/webhooks", webhookHandler.GetWebhooks)
 		})
 	})
 

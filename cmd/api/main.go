@@ -30,11 +30,13 @@ func main() {
 	authUseCase := application.NewAuthUseCase(partnerRepo, jwtService)
 	walletUseCase := application.NewWalletUseCase(walletRepo)
 	transactionUseCase := application.NewTransactionUseCase(transactionRepo, walletRepo, webhookRepo)
+	webhookUseCase := application.NewWebhookUseCase(webhookRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUseCase)
 	walletHandler := handler.NewWalletHandler(walletUseCase)
 	transactionHandler := handler.NewTransactionHandler(transactionUseCase)
+	webhookHandler := handler.NewWebhookHandler(webhookUseCase)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -44,6 +46,7 @@ func main() {
 		authHandler,
 		walletHandler,
 		transactionHandler,
+		webhookHandler,
 		authMiddleware,
 	)
 
