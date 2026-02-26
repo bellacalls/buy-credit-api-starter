@@ -25,8 +25,8 @@ func (h *AuthHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.ClientID == "" || req.ClientSecret == "" {
-		response.Error(w, http.StatusBadRequest, "MISSING_FIELDS", "clientId and clientSecret are required")
+	if req.APIKey == "" || req.APISecret == "" {
+		response.Error(w, http.StatusBadRequest, "MISSING_FIELDS", "apiKey and apiSecret are required")
 		return
 	}
 

@@ -6,57 +6,39 @@ type TransactionStatus string
 type TransactionType string
 
 const (
-	TransactionStatusPending TransactionStatus = "PENDING"
-	TransactionStatusSuccess TransactionStatus = "SUCCESS"
-	TransactionStatusFailed  TransactionStatus = "FAILED"
+	TransactionStatusPending    TransactionStatus = "PENDING"
+	TransactionStatusSuccessful TransactionStatus = "SUCCESSFUL"
+	TransactionStatusFailed     TransactionStatus = "FAILED"
 
 	TransactionTypeCreditPurchase TransactionType = "CREDIT_PURCHASE"
 )
 
 type Transaction struct {
-	ID              string            `json:"id"`
-	WalletID        string            `json:"walletId"`
-	UserID          string            `json:"userId"`
-	PartnerWalletID string            `json:"partnerWalletId"`
-	Amount          string            `json:"amount"`
-	Currency        string            `json:"currency"`
-	Status          TransactionStatus `json:"status"`
-	Type            TransactionType   `json:"type"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	FailureReason   string            `json:"failureReason,omitempty"`
-	CreatedAt       time.Time         `json:"createdAt"`
-	UpdatedAt       time.Time         `json:"updatedAt"`
-	CompletedAt     *time.Time        `json:"completedAt,omitempty"`
+	ID        string            `json:"transactionId"`
+	UserID    string            `json:"userId"`
+	Amount    float64           `json:"amount"`
+	Currency  string            `json:"currency"`
+	Status    TransactionStatus `json:"status"`
+	Timestamp time.Time         `json:"timestamp"`
 }
 
-func NewTransaction(id, walletID, userID, partnerWalletID, amount, currency string, metadata map[string]string) *Transaction {
-	now := time.Now()
+func NewTransaction(id, userID, currency string, amount float64) *Transaction {
 	return &Transaction{
-		ID:              id,
-		WalletID:        walletID,
-		UserID:          userID,
-		PartnerWalletID: partnerWalletID,
-		Amount:          amount,
-		Currency:        currency,
-		Status:          TransactionStatusPending,
-		Type:            TransactionTypeCreditPurchase,
-		Metadata:        metadata,
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		ID:        id,
+		UserID:    userID,
+		Amount:    amount,
+		Currency:  currency,
+		Status:    TransactionStatusPending,
+		Timestamp: time.Now(),
 	}
 }
 
-func (t *Transaction) MarkSuccess() {
-	now := time.Now()
-	t.Status = TransactionStatusSuccess
-	t.UpdatedAt = now
-	t.CompletedAt = &now
+func (t *Transaction) MarkSuccessful() {
+	t.Status = TransactionStatusSuccessful
+	t.Timestamp = time.Now()
 }
 
-func (t *Transaction) MarkFailed(reason string) {
-	now := time.Now()
+func (t *Transaction) MarkFailed() {
 	t.Status = TransactionStatusFailed
-	t.FailureReason = reason
-	t.UpdatedAt = now
-	t.CompletedAt = &now
+	t.Timestamp = time.Now()
 }

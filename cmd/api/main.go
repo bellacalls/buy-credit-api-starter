@@ -18,9 +18,7 @@ import (
 
 func main() {
 	// Initialize repositories (in-memory for this example)
-	walletRepo := repository.NewInMemoryWalletRepository()
 	transactionRepo := repository.NewInMemoryTransactionRepository()
-	webhookRepo := repository.NewInMemoryWebhookRepository()
 	partnerRepo := repository.NewInMemoryPartnerRepository()
 
 	// Initialize JWT service
@@ -28,15 +26,11 @@ func main() {
 
 	// Initialize use cases
 	authUseCase := application.NewAuthUseCase(partnerRepo, jwtService)
-	walletUseCase := application.NewWalletUseCase(walletRepo)
-	transactionUseCase := application.NewTransactionUseCase(transactionRepo, walletRepo, webhookRepo)
-	webhookUseCase := application.NewWebhookUseCase(webhookRepo)
+	transactionUseCase := application.NewTransactionUseCase(transactionRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUseCase)
-	walletHandler := handler.NewWalletHandler(walletUseCase)
 	transactionHandler := handler.NewTransactionHandler(transactionUseCase)
-	webhookHandler := handler.NewWebhookHandler(webhookUseCase)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -44,9 +38,7 @@ func main() {
 	// Setup router
 	router := handler.SetupRouter(
 		authHandler,
-		walletHandler,
 		transactionHandler,
-		webhookHandler,
 		authMiddleware,
 	)
 

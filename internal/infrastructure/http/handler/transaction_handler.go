@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sample-provider/buy-credit-api/internal/application"
-	"github.com/sample-provider/buy-credit-api/internal/infrastructure/http/middleware"
 	"github.com/sample-provider/buy-credit-api/internal/infrastructure/http/response"
 )
 
@@ -28,21 +27,10 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 	}
 
 	// Validate required fields
-	if req.UserID == "" || req.WalletID == "" || req.Amount == "" || req.Currency == "" {
-		response.Error(w, http.StatusBadRequest, "MISSING_FIELDS", "userId, walletId, amount, and currency are required")
+	if req.UserID == "" || req.Amount == 0 || req.Currency == "" {
+		response.Error(w, http.StatusBadRequest, "MISSING_FIELDS", "userId, amount, and currency are required")
 		return
 	}
-
-	partnerID := middleware.GetPartnerID(r.Context())
-	if partnerID == "" {
-		response.Error(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid authentication")
-		return
-	}
-
-	// Get partner wallet ID (in production, fetch from partner entity)
-	req.PartnerID = partnerID
-	req.PartnerWalletID = "wlt_partner_bella" // In production, get from partner entity
-	req.IdempotencyKey = r.Header.Get("Idempotency-Key")
 
 	txnResp, err := h.transactionUseCase.CreateTransaction(r.Context(), req)
 	if err != nil {
@@ -50,25 +38,16 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 		code := "INTERNAL_ERROR"
 
 		switch err.Error() {
-		case "wallet not found":
-			statusCode = http.StatusNotFound
-			code = "WALLET_NOT_FOUND"
-		case "wallet does not belong to user":
-			statusCode = http.StatusForbidden
-			code = "FORBIDDEN"
-		case "wallet is not active":
+		case "invalid amount":
 			statusCode = http.StatusBadRequest
-			code = "WALLET_INACTIVE"
-		case "insufficient balance":
-			statusCode = http.StatusBadRequest
-			code = "INSUFFICIENT_BALANCE"
+			code = "INVALID_AMOUNT"
 		}
 
 		response.Error(w, statusCode, code, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, txnResp)
+	response.JSON(w, http.StatusOK, txnResp)
 }
 
 func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {

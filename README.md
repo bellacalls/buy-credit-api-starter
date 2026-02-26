@@ -1,6 +1,6 @@
-# Sample Provider Buy Credit API
+# Buy Credit API Quickstart
 
-A production-ready REST API for wallet-based credit purchases with third-party partner integration.
+A production-ready REST API for credit purchases.
 
 ## Architecture
 
@@ -22,11 +22,8 @@ Built with Clean Architecture / Domain-Driven Design (DDD) principles:
 ## Features
 
 - ✅ JWT-based authentication
-- ✅ Wallet management
 - ✅ Credit purchase transactions
-- ✅ Idempotency key support
 - ✅ Transaction status tracking
-- ✅ Webhook registration and management
 - ✅ RESTful API design
 - ✅ Clean error handling
 - ✅ Context-aware operations
@@ -40,7 +37,7 @@ Built with Clean Architecture / Domain-Driven Design (DDD) principles:
 
 ```bash
 # Clone repository
-cd /Users/dapoadeleke/GolandProjects/bella/sample-provider-buy-credit-api
+cd buy-credit-api-starter
 
 # Install dependencies
 go mod download
@@ -58,177 +55,82 @@ The server starts on `http://localhost:8080`
 http://localhost:8080/v1
 ```
 
-### Authentication
+### 1. Get Access Token
 
 **POST /auth/token**
+
+Request:
 ```bash
 curl -X POST http://localhost:8080/v1/auth/token \
   -H "Content-Type: application/json" \
   -d '{
-    "clientId": "bella_mobile_prod",
-    "clientSecret": "secret_bella_123"
+    "apiKey": "API_KEY",
+    "apiSecret": "API_SECRET"
   }'
 ```
 
 Response:
 ```json
 {
-  "accessToken": "eyJhbGc...",
-  "tokenType": "Bearer",
-  "expiresIn": 3600
+  "accessToken": "ACCESS_TOKEN"
 }
 ```
 
-### Get Wallets
-
-**GET /wallets**
-```bash
-curl -X GET http://localhost:8080/v1/users/{user_id}/wallets \
-  -H "Authorization: Bearer {token}" \
-```
-
-Response:
-```json
-{
-  "wallets": [
-    {
-      "id": "wlt_usd_abc123",
-      "userId": "usr_123",
-      "currency": "USD",
-      "balance": "1500.50",
-      "status": "ACTIVE"
-    }
-  ]
-}
-```
-
-### Create Transaction (Buy Credit)
+### 2. Transaction (Buy Credit)
 
 **POST /transactions**
+
+Request:
 ```bash
 curl -X POST http://localhost:8080/v1/transactions \
-  -H "Authorization: Bearer {token}" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "idempotencyKey": "unique-key-123",
-    "userId": "usr_123",
-    "walletId": "wlt_usd_abc123",
-    "amount": "10.00",
-    "currency": "USD",
-    "metadata": {
-      "phoneNumber": "+1234567890",
-      "provider": "bella_mobile"
-    }
+    "userId": "user_123",
+    "amount": 10,
+    "currency": "USD"
   }'
 ```
 
 Response:
 ```json
 {
-  "transaction": {
-    "id": "txn_purchase_xyz789",
-    "walletId": "wlt_usd_abc123",
-    "userId": "usr_123",
-    "partnerWalletId": "wlt_partner_bella",
-    "amount": "10.00",
-    "currency": "USD",
-    "status": "PENDING",
-    "type": "CREDIT_PURCHASE",
-    "metadata": {
-      "phoneNumber": "+1234567890",
-      "provider": "bella_mobile"
-    },
-    "createdAt": "2026-02-18T10:35:00Z",
-    "updatedAt": "2026-02-18T10:35:00Z"
-  }
+  "transactionId": "txn_123",
+  "userId": "user_123",
+  "currency": "USD",
+  "amount": 10,
+  "status": "SUCCESSFUL",
+  "timestamp": "2026-02-05T10:35:00Z"
 }
 ```
 
-### Get Transaction Status
+### 3. Get Transaction (Buy Credit Status)
 
 **GET /transactions/{transactionId}**
+
+Request:
 ```bash
-curl -X GET http://localhost:8080/v1/transactions/txn_purchase_xyz789 \
-  -H "Authorization: Bearer {token}"
+curl -X GET http://localhost:8080/v1/transactions/txn_123 \
+  -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
 Response:
 ```json
 {
-  "transaction": {
-    "id": "txn_purchase_xyz789",
-    "status": "SUCCESS",
-    "completedAt": "2026-02-18T10:35:02Z",
-    ...
-  }
+  "transactionId": "txn_123",
+  "userId": "user_123",
+  "currency": "USD",
+  "amount": 10,
+  "status": "SUCCESSFUL",
+  "timestamp": "2026-02-05T10:35:00Z"
 }
-```
-
-### Register Webhook
-
-**POST /webhooks**
-```bash
-curl -X POST http://localhost:8080/v1/webhooks \
-  -H "Authorization: Bearer {token}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://bellamobile.co/webhooks/sample-provider",
-    "events": ["transaction.completed", "transaction.failed"],
-    "secret": "webhook_secret_123"
-  }'
-```
-
-Response:
-```json
-{
-  "webhook": {
-    "id": "whk_abc123",
-    "partnerId": "partner_bella",
-    "url": "https://bellamobile.co/webhooks/sample-provider",
-    "events": ["transaction.completed", "transaction.failed"],
-    "status": "ACTIVE",
-    "createdAt": "2026-02-18T10:00:00Z"
-  }
-}
-```
-
-### Get Webhooks
-
-**GET /webhooks**
-```bash
-curl -X GET http://localhost:8080/v1/webhooks \
-  -H "Authorization: Bearer {token}"
 ```
 
 ## Transaction Status Values
 
 - `PENDING` - Transaction is being processed
-- `SUCCESS` - Transaction completed successfully
+- `SUCCESSFUL` - Transaction completed successfully
 - `FAILED` - Transaction failed
-
-## Webhook Events
-
-Webhook events are sent with HMAC signature verification:
-
-**Headers:**
-- `X-Sample Provider-Signature`: HMAC-SHA256 signature
-- `X-Sample Provider-Event`: Event type
-
-**Event Types:**
-- `transaction.completed`
-- `transaction.failed`
-
-**Payload:**
-```json
-{
-  "eventId": "evt_abc123",
-  "eventType": "transaction.completed",
-  "timestamp": "2026-02-18T10:35:02Z",
-  "data": {
-    "transaction": { ... }
-  }
-}
-```
 
 ## Error Responses
 
@@ -246,18 +148,8 @@ All errors follow this format:
 - `INVALID_CREDENTIALS` - Authentication failed
 - `INVALID_TOKEN` - Token is invalid or expired
 - `MISSING_AUTH_TOKEN` - No authorization header
-- `INSUFFICIENT_BALANCE` - Wallet balance too low
-- `WALLET_NOT_FOUND` - Wallet doesn't exist
+- `INVALID_AMOUNT` - Amount is invalid or negative
 - `TRANSACTION_NOT_FOUND` - Transaction doesn't exist
-
-## Idempotency
-
-Use the `Idempotency-Key` header for safe retries:
-```
-Idempotency-Key: unique-key-12345
-```
-
-Duplicate requests with the same key return the original transaction.
 
 ## Development
 
@@ -269,26 +161,24 @@ Duplicate requests with the same key return the original transaction.
 
 ### Test Data
 
-**Partner Credentials:**
-- Client ID: `bella_mobile_prod`
-- Client Secret: `secret_bella_123`
+**API Credentials:**
+- API Key: `bella_mobile_prod`
+- API Secret: `secret_bella_123`
 
 **Test User:**
-- User ID: `usr_123`
-- Wallet ID: `wlt_usd_abc123`
-- Balance: `1500.50 USD`
+- User ID: `user_123`
 
 ## Production Considerations
 
 This implementation uses in-memory storage. For production:
 
-1. Replace repository implementations with database persistence (PostgreSQL, etc.)
-2. Add proper logging and monitoring
-3. Implement webhook delivery queue/retry mechanism
-4. Add rate limiting
-5. Implement proper secret management
-6. Add comprehensive testing
-7. Set up CI/CD pipeline
-8. Configure HTTPS/TLS
-9. Add API documentation (Swagger/OpenAPI)
-10. Implement proper balance locking for transactions
+1. **Database Persistence**: Replace repository implementations with database (PostgreSQL, etc.)
+2. **Logging & Monitoring**: Add structured logging and APM
+3. **Rate Limiting**: Implement rate limiting on all endpoints
+4. **Secret Management**: Use secure secret storage (AWS Secrets Manager, Vault, etc.)
+5. **Testing**: Add comprehensive unit, integration, and security tests
+6. **CI/CD**: Set up automated testing and deployment pipeline
+7. **HTTPS/TLS**: Configure TLS certificates and enforce HTTPS
+8. **API Documentation**: Generate Swagger/OpenAPI documentation
+9. **Transaction Processing**: Add proper transaction state machine and timeout handling
+10. **Webhook Notifications**: Implement webhook delivery for transaction status updates

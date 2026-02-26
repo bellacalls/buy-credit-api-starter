@@ -15,14 +15,12 @@ type AuthUseCase struct {
 }
 
 type AuthRequest struct {
-	ClientID     string `json:"clientId"`
-	ClientSecret string `json:"clientSecret"`
+	APIKey    string `json:"apiKey"`
+	APISecret string `json:"apiSecret"`
 }
 
 type AuthResponse struct {
 	AccessToken string `json:"accessToken"`
-	TokenType   string `json:"tokenType"`
-	ExpiresIn   int    `json:"expiresIn"`
 }
 
 func NewAuthUseCase(partnerRepo repository.PartnerRepository, jwtService *auth.JWTService) *AuthUseCase {
@@ -33,12 +31,12 @@ func NewAuthUseCase(partnerRepo repository.PartnerRepository, jwtService *auth.J
 }
 
 func (uc *AuthUseCase) Authenticate(ctx context.Context, req AuthRequest) (*AuthResponse, error) {
-	partner, err := uc.partnerRepo.FindByClientID(ctx, req.ClientID)
+	partner, err := uc.partnerRepo.FindByClientID(ctx, req.APIKey)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
-	if partner.ClientSecret != req.ClientSecret {
+	if partner.ClientSecret != req.APISecret {
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -50,7 +48,5 @@ func (uc *AuthUseCase) Authenticate(ctx context.Context, req AuthRequest) (*Auth
 
 	return &AuthResponse{
 		AccessToken: token,
-		TokenType:   "Bearer",
-		ExpiresIn:   int(expiresIn.Seconds()),
 	}, nil
 }

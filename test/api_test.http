@@ -3,29 +3,23 @@
 # Expected response: 200 OK with health status
 GET http://localhost:8080/health
 
-### User Authentication
-# Tests the login functionality with valid credentials
-# Expected response: 200 OK with authentication token
+### 1. Get Access Token
+# Tests the authentication with API credentials
+# Expected response: 200 OK with access token
 # Stores the token in a variable for subsequent requests
 POST http://localhost:8080/v1/auth/token
 Content-Type: application/json
 
 {
-  "clientId": "bella_mobile_prod",
-  "clientSecret": "secret_bella_123"
+  "apiKey": "bella_mobile_prod",
+  "apiSecret": "secret_bella_123"
 }
 
 > {%
     client.global.set("auth_token", response.body.accessToken);
 %}
 
-### Get User Wallets
-# Retrieves all wallets for the user with ID usr_123
-# Expected response: 200 OK with list of wallets
-GET http://localhost:8080/v1/users/usr_123/wallets
-Authorization: Bearer {{auth_token}}
-
-### Create Transaction (Buy Credit)
+### 2. Transaction (Buy Credit)
 # Creates a new credit purchase transaction
 # Expected response: 200 OK with transaction details
 # Stores the transaction ID for subsequent requests
@@ -34,47 +28,17 @@ Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-  "idempotencyKey": "test-key-{{$timestamp}}",
-  "userId": "usr_123",
-  "walletId": "wlt_usd_abc123",
-  "amount": "10.00",
-  "currency": "USD",
-  "metadata": {
-    "phoneNumber": "+1234567890",
-    "provider": "bella_mobile"
-  }
+  "userId": "user_123",
+  "amount": 10,
+  "currency": "USD"
 }
 
 > {%
-    client.global.set("transaction_id", response.body.transaction.id);
+    client.global.set("transaction_id", response.body.transactionId);
 %}
 
-### Get Transaction Status
+### 3. Get Transaction (Buy Credit Status)
 # Retrieves the current status of a transaction
 # Expected response: 200 OK with transaction details
 GET http://localhost:8080/v1/transactions/{{transaction_id}}
-Authorization: Bearer {{auth_token}}
-
-### Register Webhook
-# Registers a new webhook for the authenticated partner
-# Expected response: 201 Created with webhook details
-# Stores the webhook ID for subsequent requests
-POST http://localhost:8080/v1/webhooks
-Authorization: Bearer {{auth_token}}
-Content-Type: application/json
-
-{
-  "url": "https://bellamobile.co/webhooks/sample-provider",
-  "events": ["transaction.completed", "transaction.failed"],
-  "secret": "webhook_secret_123"
-}
-
-> {%
-    client.global.set("webhook_id", response.body.webhook.id);
-%}
-
-### Get Webhooks
-# Retrieves all webhooks for the authenticated partner
-# Expected response: 200 OK with list of webhooks
-GET http://localhost:8080/v1/webhooks
 Authorization: Bearer {{auth_token}}
